@@ -1,5 +1,5 @@
 package transfer
 
 const (
-	BLOCK_SIZE = 512*1024
+	BLOCK_SIZE = 512 * 1024
 )

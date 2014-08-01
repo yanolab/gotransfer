@@ -3,9 +3,9 @@ package transfer
 import "sync"
 
 type ReadCloser struct {
-	sessionId SessionId
-	client Client
-	mu sync.Mutex
+	sessionId  SessionId
+	client     Client
+	mu         sync.Mutex
 	blockIndex int
 }
 

@@ -1,17 +1,18 @@
 package main
 
 import (
-	"transfer"
 	"flag"
-	"strings"
-	"os"
 	"fmt"
+	"os"
+	"strings"
+	"transfer"
 )
 
 var mode, addr string
 var localFile, remoteFile string
 var readDirectory string
 var resumeId int
+
 func init() {
 	flag.StringVar(&mode, "mode", "client", "run mode [client|server]")
 	flag.StringVar(&addr, "addr", ":12427", "bind or connect addr")

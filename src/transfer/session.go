@@ -1,15 +1,15 @@
 package transfer
 
 import (
-	"sync"
 	"os"
+	"sync"
 )
 
 type SessionId int64
 
 type Session struct {
-	mu *sync.Mutex
-	files map[SessionId]*os.File
+	mu      *sync.Mutex
+	files   map[SessionId]*os.File
 	counter SessionId
 }
 

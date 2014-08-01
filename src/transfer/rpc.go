@@ -1,12 +1,12 @@
 package transfer
 
 import (
-	"path/filepath"
-	"os"
 	"errors"
 	"io"
-	"time"
 	"log"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 type Request struct {
@@ -18,31 +18,31 @@ type FileRequest struct {
 }
 
 type GetRequest struct {
-	Id SessionId
+	Id      SessionId
 	BlockId int
 }
 
 type GetResponse struct {
 	BlockId int
-	Size int64
-	Data []byte
+	Size    int64
+	Data    []byte
 }
 
 type ReadRequest struct {
-	Id SessionId
+	Id     SessionId
 	Offset int64
-	Size int
+	Size   int
 }
 
 type ReadResponse struct {
 	Size int
 	Data []byte
-	EOF bool
+	EOF  bool
 }
 
 type StatResponse struct {
-	Type string
-	Size int64
+	Type         string
+	Size         int64
 	LastModified time.Time
 }
 
@@ -51,12 +51,12 @@ func (r *StatResponse) IsDir() bool {
 }
 
 type Response struct {
-	Id SessionId
+	Id     SessionId
 	Result bool
 }
 
 type Rpc struct {
-	server *Server
+	server  *Server
 	session *Session
 }
 
