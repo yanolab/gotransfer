@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"transfer"
+
+	"github.com/yanolab/gotransfer/transfer"
 )
 
 var mode, addr string
