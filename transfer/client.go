@@ -1,3 +1,4 @@
+// Package transfer provides client and server for file transfer.
 package transfer
 
 import (
@@ -9,15 +10,18 @@ import (
 	"os"
 )
 
+// Client is a file transfer client.
 type Client struct {
 	Addr      string
 	rpcClient *rpc.Client
 }
 
+// NewClient creates a new Client.
 func NewClient(addr string) *Client {
 	return &Client{Addr: addr}
 }
 
+// Dial connects to the server.
 func (c *Client) Dial() error {
 	client, err := rpc.DialHTTP("tcp", c.Addr)
 	if err != nil {
@@ -28,10 +32,12 @@ func (c *Client) Dial() error {
 	return nil
 }
 
+// Close closes the connection to the server.
 func (c *Client) Close() error {
 	return c.rpcClient.Close()
 }
 
+// Open opens a file on the server and returns a session ID.
 func (c *Client) Open(filename string) (SessionId, error) {
 	var res Response
 	if err := c.rpcClient.Call("Rpc.Open", FileRequest{Filename: filename}, &res); err != nil {
@@ -41,6 +47,7 @@ func (c *Client) Open(filename string) (SessionId, error) {
 	return res.Id, nil
 }
 
+// Stat returns file information from the server.
 func (c *Client) Stat(filename string) (*StatResponse, error) {
 	var res StatResponse
 	if err := c.rpcClient.Call("Rpc.Stat", FileRequest{Filename: filename}, &res); err != nil {
@@ -50,10 +57,12 @@ func (c *Client) Stat(filename string) (*StatResponse, error) {
 	return &res, nil
 }
 
+// GetBlock gets a block of data from the server.
 func (c *Client) GetBlock(sessionId SessionId, blockId int) ([]byte, error) {
 	return c.ReadAt(sessionId, int64(blockId)*BLOCK_SIZE, BLOCK_SIZE)
 }
 
+// ReadAt reads data from the server at a specific offset.
 func (c *Client) ReadAt(sessionId SessionId, offset int64, size int) ([]byte, error) {
 	res := &ReadResponse{Data: make([]byte, size)}
 	err := c.rpcClient.Call("Rpc.ReadAt", ReadRequest{Id: sessionId, Size: size, Offset: offset}, &res)
@@ -69,6 +78,7 @@ func (c *Client) ReadAt(sessionId SessionId, offset int64, size int) ([]byte, er
 	return res.Data, nil
 }
 
+// Read reads data from the server.
 func (c *Client) Read(sessionId SessionId, buf []byte) (int, error) {
 	res := &ReadResponse{Data: buf}
 	if err := c.rpcClient.Call("Rpc.Read", ReadRequest{Id: sessionId, Size: cap(buf)}, &res); err != nil {
@@ -78,6 +88,7 @@ func (c *Client) Read(sessionId SessionId, buf []byte) (int, error) {
 	return res.Size, nil
 }
 
+// CloseSession closes a session on the server.
 func (c *Client) CloseSession(sessionId SessionId) error {
 	res := &Response{}
 	if err := c.rpcClient.Call("Rpc.Close", Request{Id: sessionId}, &res); err != nil {
@@ -87,10 +98,12 @@ func (c *Client) CloseSession(sessionId SessionId) error {
 	return nil
 }
 
+// Download downloads a file from the server.
 func (c *Client) Download(filename, saveFile string) error {
 	return c.DownloadAt(filename, saveFile, 0)
 }
 
+// DownloadAt downloads a file from the server, starting from a specific block.
 func (c *Client) DownloadAt(filename, saveFile string, blockId int) error {
 	stat, err := c.Stat(filename)
 	if err != nil {
@@ -117,6 +130,8 @@ func (c *Client) DownloadAt(filename, saveFile string, blockId int) error {
 	if err != nil {
 		return err
 	}
+	// Ensure session is closed even if download fails.
+	defer c.CloseSession(sessionId)
 
 	for i := blockId; i < blocks; i++ {
 		buf, rerr := c.GetBlock(sessionId, i)
@@ -127,7 +142,7 @@ func (c *Client) DownloadAt(filename, saveFile string, blockId int) error {
 			return werr
 		}
 
-		if i%((blocks-blockId)/100+1) == 0 {
+		if (blocks-blockId) > 0 && i%((blocks-blockId)/100+1) == 0 {
 			log.Printf("Downloading %s [%d/%d] blocks", filename, i-blockId+1, blocks-blockId)
 		}
 
@@ -136,8 +151,6 @@ func (c *Client) DownloadAt(filename, saveFile string, blockId int) error {
 		}
 	}
 	log.Printf("Download %s completed", filename)
-
-	c.CloseSession(sessionId)
 
 	return nil
 }
